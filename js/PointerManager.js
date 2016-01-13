@@ -74,11 +74,22 @@ class PointerManager {
         let decal = null;
 
         this.game.scene.getEngine().getRenderingCanvas().addEventListener(eventPrefix + "down", () => {
+
+            // stop player animations
+            this.game.scene.stopAnimation(this.game.player);
+            // reset positions of all hyphens
+            this.positions = [];
+            // reset all hyphens
+            this.hyphens = [];
+
+
             let pickInfo = this.game.scene.pick(
                 this.game.scene.pointerX,
                 this.game.scene.pointerY,
                 (mesh) => { return mesh.name == 'ground'});
             if (pickInfo.hit) {
+                // set last position to player pos
+                this.lastPosition = this.game.player.position.clone();
 
                 decal = BABYLON.Mesh.CreateDecal("decal", pickInfo.pickedMesh, pickInfo.pickedPoint, pickInfo.getNormal(true), decalSize);
                 decal.material = this.decalMaterial;
@@ -90,11 +101,6 @@ class PointerManager {
             decal = null;
 
             this.movePlayer();
-
-            //for (let h of this.hyphens) {
-            //    h.dispose();
-            //}
-            //this.hyphens = [];
         });
 
         this.game.scene.registerBeforeRender(() => {
@@ -122,22 +128,31 @@ class PointerManager {
 
     movePlayer() {
 
+        // reset animations
+        this.game.player.animations = [];
+
         // create animation
         let obj = [];
         let nb = 0;
+
+        var animationBox = new BABYLON.Animation("tutoAnimation", "position", 60, BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
+            BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+
         for (let p of this.positions) {
             obj.push({
                 frame : nb,
                 value : p
             });
             nb += 1;
+
         }
 
-        var animationBox = new BABYLON.Animation("tutoAnimation", "position", 60, BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
-            BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
         animationBox.setKeys(obj);
         this.game.player.animations.push(animationBox);
-        this.game.scene.beginAnimation(this.game.player, 0, nb);
+
+        console.log(this.game.player.animations);
+        let animatable = this.game.scene.beginAnimation(this.game.player, 0, nb);
+        animatable.speedRatio = 0.5;
 
         //this.game.player.whenStop = () => {
         //    if (this.positions.length > 0) {

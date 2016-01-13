@@ -85,10 +85,20 @@ var PointerManager = (function () {
             var decal = null;
 
             this.game.scene.getEngine().getRenderingCanvas().addEventListener(eventPrefix + "down", function () {
+
+                // stop player animations
+                _this.game.scene.stopAnimation(_this.game.player);
+                // reset positions of all hyphens
+                _this.positions = [];
+                // reset all hyphens
+                _this.hyphens = [];
+
                 var pickInfo = _this.game.scene.pick(_this.game.scene.pointerX, _this.game.scene.pointerY, function (mesh) {
                     return mesh.name == 'ground';
                 });
                 if (pickInfo.hit) {
+                    // set last position to player pos
+                    _this.lastPosition = _this.game.player.position.clone();
 
                     decal = BABYLON.Mesh.CreateDecal("decal", pickInfo.pickedMesh, pickInfo.pickedPoint, pickInfo.getNormal(true), decalSize);
                     decal.material = _this.decalMaterial;
@@ -100,11 +110,6 @@ var PointerManager = (function () {
                 decal = null;
 
                 _this.movePlayer();
-
-                //for (let h of this.hyphens) {
-                //    h.dispose();
-                //}
-                //this.hyphens = [];
             });
 
             this.game.scene.registerBeforeRender(function () {
@@ -126,9 +131,15 @@ var PointerManager = (function () {
         key: "movePlayer",
         value: function movePlayer() {
 
+            // reset animations
+            this.game.player.animations = [];
+
             // create animation
             var obj = [];
             var nb = 0;
+
+            var animationBox = new BABYLON.Animation("tutoAnimation", "position", 60, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+
             var _iteratorNormalCompletion = true;
             var _didIteratorError = false;
             var _iteratorError = undefined;
@@ -158,10 +169,12 @@ var PointerManager = (function () {
                 }
             }
 
-            var animationBox = new BABYLON.Animation("tutoAnimation", "position", 60, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
             animationBox.setKeys(obj);
             this.game.player.animations.push(animationBox);
-            this.game.scene.beginAnimation(this.game.player, 0, nb);
+
+            console.log(this.game.player.animations);
+            var animatable = this.game.scene.beginAnimation(this.game.player, 0, nb);
+            animatable.speedRatio = 0.5;
 
             //this.game.player.whenStop = () => {
             //    if (this.positions.length > 0) {
