@@ -53,10 +53,15 @@ class Game {
         // The loader
         let loader =  new BABYLON.AssetsManager(this.scene);
 
-        //let meshTask = loader.addMeshTask("city", "", "./assets/", "city.babylon");
-        //meshTask.onSuccess = (t) => {
-        //
-        //};
+        let meshTask = loader.addMeshTask("player", "", "./assets/player/", "player.babylon");
+        meshTask.onSuccess = (t) => {
+            for (let m of t.loadedMeshes) {
+                m.setEnabled (false);
+            }
+            this.assets['player'] = {
+                meshes : t.loadedMeshes
+            }
+        };
 
         loader.onFinish = () => {
 
@@ -87,6 +92,8 @@ class Game {
 
         this.pointer.init();
 
+        this.player = new Player(this);
+
     }
 
     /**
@@ -99,4 +106,36 @@ class Game {
         let random = Math.random();
         return Math.floor(((random * (max - min)) + min));
     }
+
+    /**
+     * Create an instance model from the given name.
+     * @param obj {meshes, animations}
+     * @param parent The parent gameobject
+     */
+    createModel(name, parent) {
+    if (! this.assets[name]) {
+        console.warn('No asset corresponding.');
+    } else {
+
+        let obj = this.assets[name];
+        //parent._animations = obj.animations;
+        let meshes = obj.meshes;
+
+        for (let i=0; i<meshes.length; i++ ){
+            // Don't clone mesh without any vertices
+            if (meshes[i].getTotalVertices() > 0) {
+
+                let newmesh = meshes[i].clone(meshes[i].name, null, true);
+                parent.addChildren(newmesh);
+
+                newmesh.setEnabled(true);
+                if (meshes[i].skeleton) {
+                    newmesh.skeleton = meshes[i].skeleton.clone();
+                    //this.scene.beginAnimation(newmesh, 0, 500, true);
+                    this.scene.stopAnimation(newmesh);
+                }
+            }
+        }
+    }
+}
 }

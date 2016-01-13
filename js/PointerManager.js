@@ -7,11 +7,46 @@ class PointerManager {
         this.decalMaterial = null;
         this.hyphenMaterial = null;
 
-        this.lastPosition = null;
+        this.lastPosition = BABYLON.Vector3.Zero();
 
+        // Positions of all hyphens
+        this.positions = [];
+
+        // All hyphens
         this.hyphens = [];
+    }
 
+    drawHyphen(start, end) {
 
+        let dist = BABYLON.Vector3.DistanceSquared(start, end);
+        let dir = end.subtract(start);
+        dir.normalize();
+        dir.scaleInPlace(0.3); // length = 0.4
+
+        let position = start;
+
+        while (dist > 0.1) {
+            let pickInfo = this.game.scene.pickWithRay(
+                new BABYLON.Ray(
+                    new BABYLON.Vector3(position.x, 1000, position.z),  // ray start far on top, otherwise it can not hit.
+                    new BABYLON.Vector3(0,-1,0)),
+                (mesh) => { return mesh.name == 'ground'});
+
+            if (pickInfo.hit) {
+                let decal2 = BABYLON.Mesh.CreateDecal("decal", pickInfo.pickedMesh, pickInfo.pickedPoint, pickInfo.getNormal(true), new BABYLON.Vector3(0.2, 0.2, 0.2));
+                decal2.material = this.hyphenMaterial;
+                decal2.lookAt(end, 0, Math.PI/2);
+                this.lastPosition = position;
+
+                // save positions
+                this.positions.push(pickInfo.pickedPoint);
+
+                // save hyphen
+                this.hyphens.push(decal2);
+            }
+            position.addInPlace(dir);
+            dist = BABYLON.Vector3.DistanceSquared(position, end);
+        }
     }
 
     // To call when the scene is ready
@@ -19,12 +54,14 @@ class PointerManager {
 
         this.decalMaterial = new BABYLON.StandardMaterial("decalMat", this.game.scene);
         this.decalMaterial.diffuseTexture = new BABYLON.Texture("assets/textures/mouse.png", this.game.scene);
+        this.decalMaterial.opacityTexture = this.decalMaterial.diffuseTexture;
         this.decalMaterial.diffuseTexture.hasAlpha = true;
         this.decalMaterial.specularColor = BABYLON.Color3.Black();
         this.decalMaterial.zOffset = -2;
 
         this.hyphenMaterial = new BABYLON.StandardMaterial("hyphenMat", this.game.scene);
         this.hyphenMaterial.diffuseTexture = new BABYLON.Texture("assets/textures/hyphen.png", this.game.scene);
+        this.hyphenMaterial.opacityTexture = this.hyphenMaterial.diffuseTexture;
         this.hyphenMaterial.diffuseTexture.hasAlpha = true;
         this.hyphenMaterial.specularColor = BABYLON.Color3.Black();
         this.hyphenMaterial.zOffset = -5;
@@ -45,7 +82,6 @@ class PointerManager {
 
                 decal = BABYLON.Mesh.CreateDecal("decal", pickInfo.pickedMesh, pickInfo.pickedPoint, pickInfo.getNormal(true), decalSize);
                 decal.material = this.decalMaterial;
-                this.lastPosition = decal.position.clone();
             }
         });
 
@@ -53,32 +89,61 @@ class PointerManager {
             decal.dispose();
             decal = null;
 
-            for (let h of this.hyphens) {
-                h.dispose();
-            }
-            this.hyphens = [];
+            this.movePlayer();
+
+            //for (let h of this.hyphens) {
+            //    h.dispose();
+            //}
+            //this.hyphens = [];
         });
 
         this.game.scene.registerBeforeRender(() => {
             if (decal) {
-                let pickInfo = this.game.scene.pick(this.game.scene.pointerX, this.game.scene.pointerY);
+
+                let pickInfo = this.game.scene.pick(
+                    this.game.scene.pointerX,
+                    this.game.scene.pointerY,
+                    (mesh) => {
+                        return mesh.name == 'ground'
+                    });
+
                 if (pickInfo.hit) {
                     decal.position = pickInfo.pickedPoint;
 
-                    // distance between last positions and this one
-                    let dist = BABYLON.Vector3.DistanceSquared(this.lastPosition, decal.position);
-                    if (dist >= 0.25) {
-                        let decal2 = BABYLON.Mesh.CreateDecal("decal", pickInfo.pickedMesh, pickInfo.pickedPoint, pickInfo.getNormal(true), new BABYLON.Vector3(0.2,0.2,0.2));
-                        decal2.material = this.hyphenMaterial;
-                        this.hyphens.push(decal2);
-                        this.lastPosition = decal2.position.clone();
-                    }
-
+                    this.drawHyphen(
+                        this.lastPosition,
+                        pickInfo.pickedPoint
+                    );
                 }
             }
+
         });
     }
 
+    movePlayer() {
 
+        // create animation
+        let obj = [];
+        let nb = 0;
+        for (let p of this.positions) {
+            obj.push({
+                frame : nb,
+                value : p
+            });
+            nb += 1;
+        }
 
+        var animationBox = new BABYLON.Animation("tutoAnimation", "position", 60, BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
+            BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+        animationBox.setKeys(obj);
+        this.game.player.animations.push(animationBox);
+        this.game.scene.beginAnimation(this.game.player, 0, nb);
+
+        //this.game.player.whenStop = () => {
+        //    if (this.positions.length > 0) {
+        //        this.movePlayer();
+        //    }
+        //};
+        //this.game.player.move(this.positions.shift());
+    }
 }
