@@ -25,18 +25,6 @@ class GameObject extends BABYLON.Mesh {
         this._children.push(child);
     }
 
-    getBoundingRadius() {
-        let max = 0;
-        for (let c of this._children) {
-            let rad = c.getBoundingInfo().boundingSphere.radiusWorld;
-            let dist = c.getAbsolutePosition().subtract(this.position).length();
-            if (dist+rad>max) {
-                max = dist+rad;
-            }
-        }
-        return max;
-    }
-
     isCollidingWith(other) {
         // If other is a gameobject, collide each children
         if (BABYLON.Tags.MatchesQuery(other, "__go__")) {

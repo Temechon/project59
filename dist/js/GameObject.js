@@ -42,41 +42,6 @@ var GameObject = (function (_BABYLON$Mesh) {
             this._children.push(child);
         }
     }, {
-        key: "getBoundingRadius",
-        value: function getBoundingRadius() {
-            var max = 0;
-            var _iteratorNormalCompletion = true;
-            var _didIteratorError = false;
-            var _iteratorError = undefined;
-
-            try {
-                for (var _iterator = this._children[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                    var c = _step.value;
-
-                    var rad = c.getBoundingInfo().boundingSphere.radiusWorld;
-                    var dist = c.getAbsolutePosition().subtract(this.position).length();
-                    if (dist + rad > max) {
-                        max = dist + rad;
-                    }
-                }
-            } catch (err) {
-                _didIteratorError = true;
-                _iteratorError = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion && _iterator["return"]) {
-                        _iterator["return"]();
-                    }
-                } finally {
-                    if (_didIteratorError) {
-                        throw _iteratorError;
-                    }
-                }
-            }
-
-            return max;
-        }
-    }, {
         key: "isCollidingWith",
         value: function isCollidingWith(other) {
             // If other is a gameobject, collide each children
@@ -102,27 +67,27 @@ var GameObject = (function (_BABYLON$Mesh) {
     }, {
         key: "material",
         set: function set(mat) {
-            var _iteratorNormalCompletion2 = true;
-            var _didIteratorError2 = false;
-            var _iteratorError2 = undefined;
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
 
             try {
-                for (var _iterator2 = this._children[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                    var c = _step2.value;
+                for (var _iterator = this._children[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var c = _step.value;
 
                     c.material = mat;
                 }
             } catch (err) {
-                _didIteratorError2 = true;
-                _iteratorError2 = err;
+                _didIteratorError = true;
+                _iteratorError = err;
             } finally {
                 try {
-                    if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
-                        _iterator2["return"]();
+                    if (!_iteratorNormalCompletion && _iterator["return"]) {
+                        _iterator["return"]();
                     }
                 } finally {
-                    if (_didIteratorError2) {
-                        throw _iteratorError2;
+                    if (_didIteratorError) {
+                        throw _iteratorError;
                     }
                 }
             }

@@ -28,6 +28,9 @@ var Game = (function () {
         // The state scene
         this.scene = null;
 
+        // The scene obstacle
+        this.obstacles = [];
+
         //this.guiManager = new GUIManager(this);
 
         this.pointer = new PointerManager(this);
@@ -127,6 +130,17 @@ var Game = (function () {
             this.pointer.init();
 
             this.player = new Player(this);
+
+            var o = new Obstacle(this);
+            o.position = new BABYLON.Vector3(5, 0, 5);
+            o.setReady();
+            this.obstacles.push(o);
+
+            //this.scene.registerBeforeRender(() => {
+            //    console.log('move');
+            //    this.player.moveWithCollisions(new BABYLON.Vector3(-0.1, 0, 0));
+            //    console.log(this.player.position);
+            //})
         }
 
         /**

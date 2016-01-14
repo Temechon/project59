@@ -20,6 +20,9 @@ class Game {
         // The state scene
         this.scene   = null;
 
+        // The scene obstacle
+        this.obstacles = [];
+
         //this.guiManager = new GUIManager(this);
 
         this.pointer = new PointerManager(this);
@@ -94,6 +97,18 @@ class Game {
 
         this.player = new Player(this);
 
+        let o = new Obstacle(this);
+        o.position = new BABYLON.Vector3(5,0,5);
+        o.setReady();
+        this.obstacles.push(o);
+
+        //this.scene.registerBeforeRender(() => {
+        //    console.log('move');
+        //    this.player.moveWithCollisions(new BABYLON.Vector3(-0.1, 0, 0));
+        //    console.log(this.player.position);
+        //})
+
+
     }
 
     /**
@@ -113,29 +128,29 @@ class Game {
      * @param parent The parent gameobject
      */
     createModel(name, parent) {
-    if (! this.assets[name]) {
-        console.warn('No asset corresponding.');
-    } else {
+        if (! this.assets[name]) {
+            console.warn('No asset corresponding.');
+        } else {
 
-        let obj = this.assets[name];
-        //parent._animations = obj.animations;
-        let meshes = obj.meshes;
+            let obj = this.assets[name];
+            //parent._animations = obj.animations;
+            let meshes = obj.meshes;
 
-        for (let i=0; i<meshes.length; i++ ){
-            // Don't clone mesh without any vertices
-            if (meshes[i].getTotalVertices() > 0) {
+            for (let i=0; i<meshes.length; i++ ){
+                // Don't clone mesh without any vertices
+                if (meshes[i].getTotalVertices() > 0) {
 
-                let newmesh = meshes[i].clone(meshes[i].name, null, true);
-                parent.addChildren(newmesh);
+                    let newmesh = meshes[i].clone(meshes[i].name, null, true);
+                    parent.addChildren(newmesh);
 
-                newmesh.setEnabled(true);
-                if (meshes[i].skeleton) {
-                    newmesh.skeleton = meshes[i].skeleton.clone();
-                    //this.scene.beginAnimation(newmesh, 0, 500, true);
-                    this.scene.stopAnimation(newmesh);
+                    newmesh.setEnabled(true);
+                    if (meshes[i].skeleton) {
+                        newmesh.skeleton = meshes[i].skeleton.clone();
+                        //this.scene.beginAnimation(newmesh, 0, 500, true);
+                        this.scene.stopAnimation(newmesh);
+                    }
                 }
             }
         }
     }
-}
 }

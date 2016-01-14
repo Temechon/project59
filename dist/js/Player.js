@@ -1,12 +1,12 @@
-'use strict';
+"use strict";
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Player = (function (_GameObject) {
     _inherits(Player, _GameObject);
@@ -18,51 +18,72 @@ var Player = (function (_GameObject) {
 
         _classCallCheck(this, Player);
 
-        _get(Object.getPrototypeOf(Player.prototype), 'constructor', this).call(this, game);
+        _get(Object.getPrototypeOf(Player.prototype), "constructor", this).call(this, game);
+
+        this.hollowPosition = BABYLON.Vector3.Zero();
 
         // Set shape
         this.game.createModel('player', this);
 
-        this.speed = 0.3;
-        this._direction = new BABYLON.Vector3(0, 0, 0);
-        this._destination = new BABYLON.Vector3(0, 0, 0);
-        this._isStopped = true;
-        this.canMove = true;
+        // Player speed
+        this.speed = 1.0;
 
-        this.whenStop = null;
+        // Callback function called when the player arrived at a given point of the path.
+        // The position is given as a parameter to this function
+        this.whenArrivedAtPoint = null;
 
         this.getScene().registerBeforeRender(function () {
             _this._update();
         });
+
+        this.ellipsoid = new BABYLON.Vector3(2, 2, 2);
     }
 
     _createClass(Player, [{
-        key: 'move',
-        value: function move(point) {
-            if (this.canMove) {
-                // Look the destination
-                this.lookAt(point);
+        key: "move",
+        value: function move(positions) {
+            var _this2 = this;
 
-                this._destination = point;
-                this._direction = this._destination.subtract(this.position);
-                this._direction.y = 0;
-                this._direction.normalize();
-                this._direction.scaleInPlace(this.speed);
-                this._isStopped = false;
+            // reset animations
+            this.animations = [];
+
+            // create animation
+            var keys = [];
+            var frame = 0;
+            var walkAnim = new BABYLON.Animation("moveAnimation", "hollowPosition", 60, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+
+            var _loop = function (p) {
+                var pos = positions[p];
+                // Push animation key
+                keys.push({
+                    frame: frame,
+                    value: pos.position
+                });
+                // For each point
+                walkAnim.addEvent(new BABYLON.AnimationEvent(frame, function () {
+                    if (p < positions.length - 1) {
+                        _this2.lookAt(positions[p + 1].position);
+                    }
+                    var diff = _this2.position.subtract(_this2.hollowPosition);
+                    diff.scaleInPlace(-1);
+                    _this2.moveWithCollisions(diff);
+                    _this2.whenArrivedAtPoint(pos);
+                }));
+                frame += 1;
+            };
+
+            for (var p = 0; p < positions.length; p++) {
+                _loop(p);
             }
+            walkAnim.setKeys(keys);
+            this.animations.push(walkAnim);
+
+            var walkAnimatable = this.game.scene.beginAnimation(this, 0, frame);
+            walkAnimatable.speedRatio = this.speed;
         }
     }, {
-        key: '_update',
-        value: function _update() {
-            if (BABYLON.Vector3.DistanceSquared(this.position, this._destination) > 1) {
-                this.position.addInPlace(this._direction);
-            } else if (!this._isStopped) {
-                this._isStopped = true;
-                if (this.whenStop) {
-                    this.whenStop();
-                }
-            }
-        }
+        key: "_update",
+        value: function _update() {}
     }]);
 
     return Player;

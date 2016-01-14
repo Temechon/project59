@@ -16,11 +16,8 @@ var PointerManager = (function () {
 
         this.lastPosition = BABYLON.Vector3.Zero();
 
-        // Positions of all hyphens
+        // Positions of all hyphens {position, decal}
         this.positions = [];
-
-        // All hyphens
-        this.hyphens = [];
     }
 
     _createClass(PointerManager, [{
@@ -42,15 +39,18 @@ var PointerManager = (function () {
 
                 if (pickInfo.hit) {
                     var decal2 = BABYLON.Mesh.CreateDecal("decal", pickInfo.pickedMesh, pickInfo.pickedPoint, pickInfo.getNormal(true), new BABYLON.Vector3(0.2, 0.2, 0.2));
+                    decal2.convertToUnIndexedMesh();
                     decal2.material = this.hyphenMaterial;
                     decal2.lookAt(end, 0, Math.PI / 2);
+                    decal2.freezeWorldMatrix();
+                    decal2.freezeNormals();
                     this.lastPosition = position;
 
                     // save positions
-                    this.positions.push(pickInfo.pickedPoint);
-
-                    // save hyphen
-                    this.hyphens.push(decal2);
+                    this.positions.push({
+                        position: pickInfo.pickedPoint,
+                        decal: decal2
+                    });
                 }
                 position.addInPlace(dir);
                 dist = BABYLON.Vector3.DistanceSquared(position, end);
@@ -69,6 +69,7 @@ var PointerManager = (function () {
             this.decalMaterial.diffuseTexture.hasAlpha = true;
             this.decalMaterial.specularColor = BABYLON.Color3.Black();
             this.decalMaterial.zOffset = -2;
+            this.decalMaterial.freeze();
 
             this.hyphenMaterial = new BABYLON.StandardMaterial("hyphenMat", this.game.scene);
             this.hyphenMaterial.diffuseTexture = new BABYLON.Texture("assets/textures/hyphen.png", this.game.scene);
@@ -76,6 +77,7 @@ var PointerManager = (function () {
             this.hyphenMaterial.diffuseTexture.hasAlpha = true;
             this.hyphenMaterial.specularColor = BABYLON.Color3.Black();
             this.hyphenMaterial.zOffset = -5;
+            this.hyphenMaterial.freeze();
 
             var decalSize = new BABYLON.Vector3(1, 1, 1);
 
@@ -89,9 +91,32 @@ var PointerManager = (function () {
                 // stop player animations
                 _this.game.scene.stopAnimation(_this.game.player);
                 // reset positions of all hyphens
+                var _iteratorNormalCompletion = true;
+                var _didIteratorError = false;
+                var _iteratorError = undefined;
+
+                try {
+                    for (var _iterator = _this.positions[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                        var p = _step.value;
+
+                        p.decal.dispose();
+                    }
+                } catch (err) {
+                    _didIteratorError = true;
+                    _iteratorError = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion && _iterator["return"]) {
+                            _iterator["return"]();
+                        }
+                    } finally {
+                        if (_didIteratorError) {
+                            throw _iteratorError;
+                        }
+                    }
+                }
+
                 _this.positions = [];
-                // reset all hyphens
-                _this.hyphens = [];
 
                 var pickInfo = _this.game.scene.pick(_this.game.scene.pointerX, _this.game.scene.pointerY, function (mesh) {
                     return mesh.name == 'ground';
@@ -109,7 +134,10 @@ var PointerManager = (function () {
                 decal.dispose();
                 decal = null;
 
-                _this.movePlayer();
+                _this.game.player.whenArrivedAtPoint = function (position) {
+                    position.decal.dispose();
+                };
+                _this.game.player.move(_this.positions);
             });
 
             this.game.scene.registerBeforeRender(function () {
@@ -126,62 +154,6 @@ var PointerManager = (function () {
                     }
                 }
             });
-        }
-    }, {
-        key: "movePlayer",
-        value: function movePlayer() {
-
-            // reset animations
-            this.game.player.animations = [];
-
-            // create animation
-            var obj = [];
-            var nb = 0;
-
-            var animationBox = new BABYLON.Animation("tutoAnimation", "position", 60, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
-
-            var _iteratorNormalCompletion = true;
-            var _didIteratorError = false;
-            var _iteratorError = undefined;
-
-            try {
-                for (var _iterator = this.positions[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                    var p = _step.value;
-
-                    obj.push({
-                        frame: nb,
-                        value: p
-                    });
-                    nb += 1;
-                }
-            } catch (err) {
-                _didIteratorError = true;
-                _iteratorError = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion && _iterator["return"]) {
-                        _iterator["return"]();
-                    }
-                } finally {
-                    if (_didIteratorError) {
-                        throw _iteratorError;
-                    }
-                }
-            }
-
-            animationBox.setKeys(obj);
-            this.game.player.animations.push(animationBox);
-
-            console.log(this.game.player.animations);
-            var animatable = this.game.scene.beginAnimation(this.game.player, 0, nb);
-            animatable.speedRatio = 0.5;
-
-            //this.game.player.whenStop = () => {
-            //    if (this.positions.length > 0) {
-            //        this.movePlayer();
-            //    }
-            //};
-            //this.game.player.move(this.positions.shift());
         }
     }]);
 
