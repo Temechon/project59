@@ -23,6 +23,9 @@ class Game {
         // The scene obstacle
         this.obstacles = [];
 
+        // limits of this level : the player cannot go through them
+        this.limits = null;
+
         //this.guiManager = new GUIManager(this);
 
         this.pointer = new PointerManager(this);
@@ -39,7 +42,7 @@ class Game {
 
         let scene = new BABYLON.Scene(this.engine);
         // Camera attached to the canvas
-        let camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,20,-10), scene);
+        let camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,20,-5), scene);
         camera.setTarget(BABYLON.Vector3.Zero());
         //camera.attachControl(this.engine.getRenderingCanvas());
 
@@ -97,10 +100,17 @@ class Game {
 
         this.player = new Player(this);
 
-        let o = new Obstacle(this);
-        o.position = new BABYLON.Vector3(5,0,5);
-        o.setReady();
-        this.obstacles.push(o);
+        let contour = [
+            new BABYLON.Vector2(6,8),
+            new BABYLON.Vector2(-6,8),
+            new BABYLON.Vector2(-6,-8),
+            new BABYLON.Vector2(6,-8)
+        ];
+        var p = new BABYLON.PolygonMeshBuilder("limits", contour, this.scene).build();
+        p.material = new BABYLON.StandardMaterial('', this.scene);
+        p.material.alpha = 0.25;
+        p.position.y = 2;
+        this.limits = p;
 
         //this.scene.registerBeforeRender(() => {
         //    console.log('move');
