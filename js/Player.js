@@ -23,7 +23,7 @@ class Player extends GameObject {
         this.getScene().registerBeforeRender(() => {
 
             let ray = new BABYLON.Ray(this.position, new BABYLON.Vector3(0,1,0));
-            let limits = this.game.limits;
+            let limits = this.game.level.limitPoly;
             let pr = this.getScene().pickWithRay(ray, (mesh) => { return mesh.name === limits.name});
 
             if (pr.hit) {
@@ -71,7 +71,7 @@ class Player extends GameObject {
 
     _update() {
         let ray = new BABYLON.Ray(this.hollowPosition, new BABYLON.Vector3(0,1,0));
-        let limits = this.game.limits;
+        let limits = this.game.level.limitPoly;
         let pr = this.getScene().pickWithRay(ray, (mesh) => { return mesh.name === limits.name});
 
         if (pr.hit) {
@@ -82,9 +82,9 @@ class Player extends GameObject {
 
         } else {
             // otherwise, animation is stop
-            //this.getScene().stopAnimation(this);
-            //this.hollowPosition.copyFrom(this.lastPosition);
-            //this.position.copyFrom(this.lastPosition);
+            this.getScene().stopAnimation(this);
+            this.hollowPosition.copyFrom(this.lastPosition);
+            this.position.copyFrom(this.lastPosition);
         }
 
     }

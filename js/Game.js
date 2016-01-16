@@ -30,6 +30,9 @@ class Game {
 
         this.pointer = new PointerManager(this);
 
+        // Build levels
+        this.levelManager = new LevelManager(this);
+
         // Resize window event
         window.addEventListener("resize", () => {
             this.engine.resize();
@@ -42,9 +45,9 @@ class Game {
 
         let scene = new BABYLON.Scene(this.engine);
         // Camera attached to the canvas
-        let camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,20,-5), scene);
+        let camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,50,-5), scene);
         camera.setTarget(BABYLON.Vector3.Zero());
-        //camera.attachControl(this.engine.getRenderingCanvas());
+        camera.attachControl(this.engine.getRenderingCanvas());
 
         // Hemispheric light to light the scene
         let h = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0,1,0), scene);
@@ -84,33 +87,27 @@ class Game {
 
     _initGame() {
 
-        // ground creations
-        var ground = BABYLON.Mesh.CreateGround("ground", 100, 100, 1, this.scene);
-        var mat = new BABYLON.StandardMaterial("", this.scene);
-        mat.diffuseTexture = new BABYLON.Texture("assets/textures/grass.jpg", this.scene);
-        mat.diffuseTexture.uScale =  mat.diffuseTexture.vScale = 10;
-        mat.specularColor = BABYLON.Color3.Black();
-        ground.material = mat;
-        ground.receiveShadows = true;
+        //// ground creations
+        //var ground = BABYLON.Mesh.CreateGround("ground", 100, 100, 1, this.scene);
+        //var mat = new BABYLON.StandardMaterial("", this.scene);
+        //mat.diffuseTexture = new BABYLON.Texture("assets/textures/grass.jpg", this.scene);
+        //mat.diffuseTexture.uScale =  mat.diffuseTexture.vScale = 10;
+        //mat.specularColor = BABYLON.Color3.Black();
+        //ground.material = mat;
+        //ground.receiveShadows = true;
+        BABYLON.SceneLoader.ImportMesh('', './assets/levels/level1/', 'level1.babylon', this.scene, (meshes) => {
+
+            this.level = this.levelManager.buildLevel(meshes);
+            this.level.init();
 
 
-        this.scene.debugLayer.show();
+            this.scene.debugLayer.show();
 
-        this.pointer.init();
+            this.pointer.init();
 
-        this.player = new Player(this);
-
-        let contour = [
-            new BABYLON.Vector2(6,8),
-            new BABYLON.Vector2(-6,8),
-            new BABYLON.Vector2(-6,-8),
-            new BABYLON.Vector2(6,-8)
-        ];
-        var p = new BABYLON.PolygonMeshBuilder("limits", contour, this.scene).build();
-        p.material = new BABYLON.StandardMaterial('', this.scene);
-        p.material.alpha = 0.25;
-        p.position.y = 2;
-        this.limits = p;
+            this.player = new Player(this);
+            this.player.position = this.level.startPosition;
+        });
 
         //this.scene.registerBeforeRender(() => {
         //    console.log('move');

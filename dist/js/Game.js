@@ -38,6 +38,9 @@ var Game = (function () {
 
         this.pointer = new PointerManager(this);
 
+        // Build levels
+        this.levelManager = new LevelManager(this);
+
         // Resize window event
         window.addEventListener("resize", function () {
             _this.engine.resize();
@@ -52,9 +55,9 @@ var Game = (function () {
 
             var scene = new BABYLON.Scene(this.engine);
             // Camera attached to the canvas
-            var camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0, 20, -5), scene);
+            var camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0, 50, -5), scene);
             camera.setTarget(BABYLON.Vector3.Zero());
-            //camera.attachControl(this.engine.getRenderingCanvas());
+            camera.attachControl(this.engine.getRenderingCanvas());
 
             // Hemispheric light to light the scene
             var h = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
@@ -118,28 +121,28 @@ var Game = (function () {
     }, {
         key: '_initGame',
         value: function _initGame() {
+            var _this3 = this;
 
-            // ground creations
-            var ground = BABYLON.Mesh.CreateGround("ground", 100, 100, 1, this.scene);
-            var mat = new BABYLON.StandardMaterial("", this.scene);
-            mat.diffuseTexture = new BABYLON.Texture("assets/textures/grass.jpg", this.scene);
-            mat.diffuseTexture.uScale = mat.diffuseTexture.vScale = 10;
-            mat.specularColor = BABYLON.Color3.Black();
-            ground.material = mat;
-            ground.receiveShadows = true;
+            //// ground creations
+            //var ground = BABYLON.Mesh.CreateGround("ground", 100, 100, 1, this.scene);
+            //var mat = new BABYLON.StandardMaterial("", this.scene);
+            //mat.diffuseTexture = new BABYLON.Texture("assets/textures/grass.jpg", this.scene);
+            //mat.diffuseTexture.uScale =  mat.diffuseTexture.vScale = 10;
+            //mat.specularColor = BABYLON.Color3.Black();
+            //ground.material = mat;
+            //ground.receiveShadows = true;
+            BABYLON.SceneLoader.ImportMesh('', './assets/levels/level1/', 'level1.babylon', this.scene, function (meshes) {
 
-            this.scene.debugLayer.show();
+                _this3.level = _this3.levelManager.buildLevel(meshes);
+                _this3.level.init();
 
-            this.pointer.init();
+                _this3.scene.debugLayer.show();
 
-            this.player = new Player(this);
+                _this3.pointer.init();
 
-            var contour = [new BABYLON.Vector2(6, 8), new BABYLON.Vector2(-6, 8), new BABYLON.Vector2(-6, -8), new BABYLON.Vector2(6, -8)];
-            var p = new BABYLON.PolygonMeshBuilder("limits", contour, this.scene).build();
-            p.material = new BABYLON.StandardMaterial('', this.scene);
-            p.material.alpha = 0.25;
-            p.position.y = 2;
-            this.limits = p;
+                _this3.player = new Player(_this3);
+                _this3.player.position = _this3.level.startPosition;
+            });
 
             //this.scene.registerBeforeRender(() => {
             //    console.log('move');

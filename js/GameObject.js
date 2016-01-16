@@ -51,4 +51,12 @@ class GameObject extends BABYLON.Mesh {
             c.material = mat;
         }
     }
+
+    // Overload mesh dispose() by removing all children first
+    dispose() {
+        for (let c of this._children) {
+            c.dispose()
+        }
+        super.dispose();
+    }
 }

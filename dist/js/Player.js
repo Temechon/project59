@@ -38,7 +38,7 @@ var Player = (function (_GameObject) {
         this.getScene().registerBeforeRender(function () {
 
             var ray = new BABYLON.Ray(_this.position, new BABYLON.Vector3(0, 1, 0));
-            var limits = _this.game.limits;
+            var limits = _this.game.level.limitPoly;
             var pr = _this.getScene().pickWithRay(ray, function (mesh) {
                 return mesh.name === limits.name;
             });
@@ -96,7 +96,7 @@ var Player = (function (_GameObject) {
         key: "_update",
         value: function _update() {
             var ray = new BABYLON.Ray(this.hollowPosition, new BABYLON.Vector3(0, 1, 0));
-            var limits = this.game.limits;
+            var limits = this.game.level.limitPoly;
             var pr = this.getScene().pickWithRay(ray, function (mesh) {
                 return mesh.name === limits.name;
             });
@@ -108,9 +108,9 @@ var Player = (function (_GameObject) {
                 this.position.copyFrom(this.hollowPosition);
             } else {
                 // otherwise, animation is stop
-                //this.getScene().stopAnimation(this);
-                //this.hollowPosition.copyFrom(this.lastPosition);
-                //this.position.copyFrom(this.lastPosition);
+                this.getScene().stopAnimation(this);
+                this.hollowPosition.copyFrom(this.lastPosition);
+                this.position.copyFrom(this.lastPosition);
             }
         }
     }]);

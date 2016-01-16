@@ -65,8 +65,10 @@ var GameObject = (function (_BABYLON$Mesh) {
 
         // Override this.material to affect all children instead
     }, {
-        key: "material",
-        set: function set(mat) {
+        key: "dispose",
+
+        // Overload mesh dispose() by removing all children first
+        value: function dispose() {
             var _iteratorNormalCompletion = true;
             var _didIteratorError = false;
             var _iteratorError = undefined;
@@ -75,7 +77,7 @@ var GameObject = (function (_BABYLON$Mesh) {
                 for (var _iterator = this._children[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
                     var c = _step.value;
 
-                    c.material = mat;
+                    c.dispose();
                 }
             } catch (err) {
                 _didIteratorError = true;
@@ -88,6 +90,36 @@ var GameObject = (function (_BABYLON$Mesh) {
                 } finally {
                     if (_didIteratorError) {
                         throw _iteratorError;
+                    }
+                }
+            }
+
+            _get(Object.getPrototypeOf(GameObject.prototype), "dispose", this).call(this);
+        }
+    }, {
+        key: "material",
+        set: function set(mat) {
+            var _iteratorNormalCompletion2 = true;
+            var _didIteratorError2 = false;
+            var _iteratorError2 = undefined;
+
+            try {
+                for (var _iterator2 = this._children[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                    var c = _step2.value;
+
+                    c.material = mat;
+                }
+            } catch (err) {
+                _didIteratorError2 = true;
+                _iteratorError2 = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+                        _iterator2["return"]();
+                    }
+                } finally {
+                    if (_didIteratorError2) {
+                        throw _iteratorError2;
                     }
                 }
             }
