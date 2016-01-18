@@ -15,10 +15,6 @@ var LevelManager = (function () {
         this.game = game;
     }
 
-    /**
-     * Regexp to search for limits of the game
-     */
-
     _createClass(LevelManager, [{
         key: 'buildLevel',
         value: function buildLevel(meshes) {
@@ -32,27 +28,13 @@ var LevelManager = (function () {
                 for (var _iterator = meshes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
                     var mesh = _step.value;
 
-                    // Limit of the field
-                    var match = LevelManager.LIMIT_REGEXP().exec(mesh.name);
-                    if (match) {
-                        // get number
-                        res.limits[Number(match[1])] = new BABYLON.Vector2(mesh.position.x, mesh.position.z);
-                        mesh.dispose();
-                    }
-
-                    if (mesh.name.indexOf('limit') !== -1) {}
                     // start position
-                    else if (mesh.name.indexOf('start') !== -1) {
-                            res.startPosition = mesh.position;
-                            mesh.dispose();
-                        }
-                        // collectible
-                        else if (mesh.name.indexOf('collect') !== -1) {
-                                res.addCollectible(new Collectible(this.game, mesh.position));
-                                mesh.dispose();
-                            } else {
-                                res.decor.push(mesh);
-                            }
+                    if (mesh.name.indexOf('start') !== -1) {
+                        res.startPosition = mesh.position;
+                        mesh.dispose();
+                    } else {
+                        console.log('unused mesh ', mesh);
+                    }
                 }
             } catch (err) {
                 _didIteratorError = true;
@@ -70,12 +52,6 @@ var LevelManager = (function () {
             }
 
             return res;
-        }
-    }], [{
-        key: 'LIMIT_REGEXP',
-        value: function LIMIT_REGEXP() {
-            return (/limit(\d+)/i
-            );
         }
     }]);
 

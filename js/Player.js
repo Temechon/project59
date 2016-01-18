@@ -20,18 +20,6 @@ class Player extends GameObject {
         // The position is given as a parameter to this function
         this.whenArrivedAtPoint = null;
 
-        this.getScene().registerBeforeRender(() => {
-
-            let ray = new BABYLON.Ray(this.position, new BABYLON.Vector3(0,1,0));
-            let limits = this.game.level.limitPoly;
-            let pr = this.getScene().pickWithRay(ray, (mesh) => { return mesh.name === limits.name});
-
-            if (pr.hit) {
-                limits.material.diffuseColor = BABYLON.Color3.Green();
-            } else {
-                limits.material.diffuseColor = BABYLON.Color3.Red();
-            }
-        });
     }
 
     move(positions) {
@@ -70,22 +58,18 @@ class Player extends GameObject {
     }
 
     _update() {
-        let ray = new BABYLON.Ray(this.hollowPosition, new BABYLON.Vector3(0,1,0));
-        let limits = this.game.level.limitPoly;
-        let pr = this.getScene().pickWithRay(ray, (mesh) => { return mesh.name === limits.name});
-
-        if (pr.hit) {
+        //if (pr.hit) {
             // save position
             this.lastPosition.copyFrom(this.position);
             // If the player is within level limits, we go forward
             this.position.copyFrom(this.hollowPosition);
 
-        } else {
-            // otherwise, animation is stop
-            this.getScene().stopAnimation(this);
-            this.hollowPosition.copyFrom(this.lastPosition);
-            this.position.copyFrom(this.lastPosition);
-        }
+        //} else {
+        //    // otherwise, animation is stop
+        //    this.getScene().stopAnimation(this);
+        //    this.hollowPosition.copyFrom(this.lastPosition);
+        //    this.position.copyFrom(this.lastPosition);
+        //}
 
     }
 }

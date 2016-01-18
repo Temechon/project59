@@ -15,49 +15,31 @@ class Game {
         this.engine         = new BABYLON.Engine(canvas, true);
 
         // Contains all loaded assets needed for this state
-        this.assets  = [];
+        this.assets         = [];
 
         // The state scene
-        this.scene   = null;
-
-        // The scene obstacle
-        this.obstacles = [];
+        this.scene          = null;
 
         // limits of this level : the player cannot go through them
-        this.limits = null;
+        this.limits         = null;
 
         //this.guiManager = new GUIManager(this);
 
-        this.pointer = new PointerManager(this);
+        this.pointer        = new PointerManager(this);
 
         // Build levels
-        this.levelManager = new LevelManager(this);
+        this.levelManager   = new LevelManager(this);
 
         // Resize window event
         window.addEventListener("resize", () => {
             this.engine.resize();
         });
 
-        this.run();
+        this._initGame();
 
     }
-    _initScene() {
 
-        let scene = new BABYLON.Scene(this.engine);
-        // Camera attached to the canvas
-        let camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,50,-5), scene);
-        camera.setTarget(BABYLON.Vector3.Zero());
-        camera.attachControl(this.engine.getRenderingCanvas());
-
-        // Hemispheric light to light the scene
-        let h = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0,1,0), scene);
-        h.intensity = 1.0;
-        return scene;
-    }
-
-    run() {
-
-        this.scene = this._initScene();
+    loadAssets() {
 
         // The loader
         let loader =  new BABYLON.AssetsManager(this.scene);
@@ -74,28 +56,23 @@ class Game {
 
         loader.onFinish = () => {
 
-            // Init the game
-            this._initGame();
+            this.scene.executeWhenReady(() => {
 
-            this.engine.runRenderLoop(() => {
-                this.scene.render();
-            });
+                this.engine.runRenderLoop(() => {
+                    this.scene.render();
+                });
+            })
+
+            // Load first level
+            this.loadLevel();
+
         };
 
         loader.load();
     }
 
-    _initGame() {
-
-        //// ground creations
-        //var ground = BABYLON.Mesh.CreateGround("ground", 100, 100, 1, this.scene);
-        //var mat = new BABYLON.StandardMaterial("", this.scene);
-        //mat.diffuseTexture = new BABYLON.Texture("assets/textures/grass.jpg", this.scene);
-        //mat.diffuseTexture.uScale =  mat.diffuseTexture.vScale = 10;
-        //mat.specularColor = BABYLON.Color3.Black();
-        //ground.material = mat;
-        //ground.receiveShadows = true;
-        BABYLON.SceneLoader.ImportMesh('', './assets/levels/level1/', 'level1.babylon', this.scene, (meshes) => {
+    loadLevel() {
+        BABYLON.SceneLoader.ImportMesh('', './assets/levels/', 'level1.babylon', this.scene, (meshes) => {
 
             this.level = this.levelManager.buildLevel(meshes);
             this.level.init();
@@ -108,12 +85,17 @@ class Game {
             this.player = new Player(this);
             this.player.position = this.level.startPosition;
         });
+    }
 
-        //this.scene.registerBeforeRender(() => {
-        //    console.log('move');
-        //    this.player.moveWithCollisions(new BABYLON.Vector3(-0.1, 0, 0));
-        //    console.log(this.player.position);
-        //})
+    _initGame() {
+
+        // Create World
+        BABYLON.SceneLoader.Load('assets/worlds/', 'world1.babylon', this.engine, (newscene) => {
+            this.scene = newscene;
+
+            // Load assets
+            this.loadAssets();
+        });
 
 
     }
@@ -131,10 +113,8 @@ class Game {
 
     /**
      * Create an instance model from the given name.
-     * @param obj {meshes, animations}
-     * @param parent The parent gameobject
      */
-    createModel(name, parent) {
+    createModel(name, parent, autoanim) {
         if (! this.assets[name]) {
             console.warn('No asset corresponding.');
         } else {
@@ -153,8 +133,10 @@ class Game {
                     newmesh.setEnabled(true);
                     if (meshes[i].skeleton) {
                         newmesh.skeleton = meshes[i].skeleton.clone();
-                        //this.scene.beginAnimation(newmesh, 0, 500, true);
                         this.scene.stopAnimation(newmesh);
+                    }
+                    if (autoanim) {
+                        this.scene.beginAnimation(newmesh, 0, 60, true);
                     }
                 }
             }

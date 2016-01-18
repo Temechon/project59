@@ -28,9 +28,6 @@ var Game = (function () {
         // The state scene
         this.scene = null;
 
-        // The scene obstacle
-        this.obstacles = [];
-
         // limits of this level : the player cannot go through them
         this.limits = null;
 
@@ -46,30 +43,13 @@ var Game = (function () {
             _this.engine.resize();
         });
 
-        this.run();
+        this._initGame();
     }
 
     _createClass(Game, [{
-        key: '_initScene',
-        value: function _initScene() {
-
-            var scene = new BABYLON.Scene(this.engine);
-            // Camera attached to the canvas
-            var camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0, 50, -5), scene);
-            camera.setTarget(BABYLON.Vector3.Zero());
-            camera.attachControl(this.engine.getRenderingCanvas());
-
-            // Hemispheric light to light the scene
-            var h = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
-            h.intensity = 1.0;
-            return scene;
-        }
-    }, {
-        key: 'run',
-        value: function run() {
+        key: 'loadAssets',
+        value: function loadAssets() {
             var _this2 = this;
-
-            this.scene = this._initScene();
 
             // The loader
             var loader = new BABYLON.AssetsManager(this.scene);
@@ -108,30 +88,25 @@ var Game = (function () {
 
             loader.onFinish = function () {
 
-                // Init the game
-                _this2._initGame();
+                _this2.scene.executeWhenReady(function () {
 
-                _this2.engine.runRenderLoop(function () {
-                    _this2.scene.render();
+                    _this2.engine.runRenderLoop(function () {
+                        _this2.scene.render();
+                    });
                 });
+
+                // Load first level
+                _this2.loadLevel();
             };
 
             loader.load();
         }
     }, {
-        key: '_initGame',
-        value: function _initGame() {
+        key: 'loadLevel',
+        value: function loadLevel() {
             var _this3 = this;
 
-            //// ground creations
-            //var ground = BABYLON.Mesh.CreateGround("ground", 100, 100, 1, this.scene);
-            //var mat = new BABYLON.StandardMaterial("", this.scene);
-            //mat.diffuseTexture = new BABYLON.Texture("assets/textures/grass.jpg", this.scene);
-            //mat.diffuseTexture.uScale =  mat.diffuseTexture.vScale = 10;
-            //mat.specularColor = BABYLON.Color3.Black();
-            //ground.material = mat;
-            //ground.receiveShadows = true;
-            BABYLON.SceneLoader.ImportMesh('', './assets/levels/level1/', 'level1.babylon', this.scene, function (meshes) {
+            BABYLON.SceneLoader.ImportMesh('', './assets/levels/', 'level1.babylon', this.scene, function (meshes) {
 
                 _this3.level = _this3.levelManager.buildLevel(meshes);
                 _this3.level.init();
@@ -143,12 +118,19 @@ var Game = (function () {
                 _this3.player = new Player(_this3);
                 _this3.player.position = _this3.level.startPosition;
             });
+        }
+    }, {
+        key: '_initGame',
+        value: function _initGame() {
+            var _this4 = this;
 
-            //this.scene.registerBeforeRender(() => {
-            //    console.log('move');
-            //    this.player.moveWithCollisions(new BABYLON.Vector3(-0.1, 0, 0));
-            //    console.log(this.player.position);
-            //})
+            // Create World
+            BABYLON.SceneLoader.Load('assets/worlds/', 'world1.babylon', this.engine, function (newscene) {
+                _this4.scene = newscene;
+
+                // Load assets
+                _this4.loadAssets();
+            });
         }
 
         /**
@@ -159,10 +141,8 @@ var Game = (function () {
 
         /**
          * Create an instance model from the given name.
-         * @param obj {meshes, animations}
-         * @param parent The parent gameobject
          */
-        value: function createModel(name, parent) {
+        value: function createModel(name, parent, autoanim) {
             if (!this.assets[name]) {
                 console.warn('No asset corresponding.');
             } else {
@@ -181,8 +161,10 @@ var Game = (function () {
                         newmesh.setEnabled(true);
                         if (meshes[i].skeleton) {
                             newmesh.skeleton = meshes[i].skeleton.clone();
-                            //this.scene.beginAnimation(newmesh, 0, 500, true);
                             this.scene.stopAnimation(newmesh);
+                        }
+                        if (autoanim) {
+                            this.scene.beginAnimation(newmesh, 0, 60, true);
                         }
                     }
                 }

@@ -25,7 +25,7 @@ var Collectible = (function (_GameObject) {
         this.position.copyFrom(position);
 
         // Create collectivle model
-        this.game.createModel('player', this);
+        this.game.createModel('badge', this, true);
 
         // Check each frame for intersection with player
         this.check = this._check.bind(this);

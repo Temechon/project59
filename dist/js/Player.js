@@ -14,8 +14,6 @@ var Player = (function (_GameObject) {
     // Call super constructor
 
     function Player(game) {
-        var _this = this;
-
         _classCallCheck(this, Player);
 
         _get(Object.getPrototypeOf(Player.prototype), "constructor", this).call(this, game);
@@ -34,27 +32,12 @@ var Player = (function (_GameObject) {
         // Callback function called when the player arrived at a given point of the path.
         // The position is given as a parameter to this function
         this.whenArrivedAtPoint = null;
-
-        this.getScene().registerBeforeRender(function () {
-
-            var ray = new BABYLON.Ray(_this.position, new BABYLON.Vector3(0, 1, 0));
-            var limits = _this.game.level.limitPoly;
-            var pr = _this.getScene().pickWithRay(ray, function (mesh) {
-                return mesh.name === limits.name;
-            });
-
-            if (pr.hit) {
-                limits.material.diffuseColor = BABYLON.Color3.Green();
-            } else {
-                limits.material.diffuseColor = BABYLON.Color3.Red();
-            }
-        });
     }
 
     _createClass(Player, [{
         key: "move",
         value: function move(positions) {
-            var _this2 = this;
+            var _this = this;
 
             // reset animations
             this.animations = [];
@@ -75,10 +58,10 @@ var Player = (function (_GameObject) {
                 walkAnim.addEvent(new BABYLON.AnimationEvent(frame, function () {
 
                     if (p < positions.length - 1) {
-                        _this2.lookAt(positions[p + 1].position);
+                        _this.lookAt(positions[p + 1].position);
                     }
-                    _this2.whenArrivedAtPoint(pos);
-                    _this2._update();
+                    _this.whenArrivedAtPoint(pos);
+                    _this._update();
                 }));
                 frame += 1;
             };
@@ -95,23 +78,18 @@ var Player = (function (_GameObject) {
     }, {
         key: "_update",
         value: function _update() {
-            var ray = new BABYLON.Ray(this.hollowPosition, new BABYLON.Vector3(0, 1, 0));
-            var limits = this.game.level.limitPoly;
-            var pr = this.getScene().pickWithRay(ray, function (mesh) {
-                return mesh.name === limits.name;
-            });
+            //if (pr.hit) {
+            // save position
+            this.lastPosition.copyFrom(this.position);
+            // If the player is within level limits, we go forward
+            this.position.copyFrom(this.hollowPosition);
 
-            if (pr.hit) {
-                // save position
-                this.lastPosition.copyFrom(this.position);
-                // If the player is within level limits, we go forward
-                this.position.copyFrom(this.hollowPosition);
-            } else {
-                // otherwise, animation is stop
-                this.getScene().stopAnimation(this);
-                this.hollowPosition.copyFrom(this.lastPosition);
-                this.position.copyFrom(this.lastPosition);
-            }
+            //} else {
+            //    // otherwise, animation is stop
+            //    this.getScene().stopAnimation(this);
+            //    this.hollowPosition.copyFrom(this.lastPosition);
+            //    this.position.copyFrom(this.lastPosition);
+            //}
         }
     }]);
 
